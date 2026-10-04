@@ -395,6 +395,13 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
   function hide(){ var s=document.getElementById("jd-splash"); if(!s||s.classList.contains("out")) return; s.classList.add("out"); setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); },700); }
   window.addEventListener("load",function(){ setTimeout(hide,Math.max(0,750-(Date.now()-t0))); });
   setTimeout(hide,4000);
+  if("serviceWorker" in navigator){
+    var hadCtrl=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange",function(){
+      if(!hadCtrl) return; try{ if(sessionStorage.getItem("jd-sw-reloaded")) return; sessionStorage.setItem("jd-sw-reloaded","1"); }catch(_){}
+      location.reload();
+    });
+  }
   if("serviceWorker" in navigator){ window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
 
 })();
