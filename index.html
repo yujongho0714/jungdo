@@ -317,6 +317,16 @@ body.editing .cs-sec [data-k]:empty::before{content:attr(data-ph);color:var(--mu
 .menu-row label{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700}
 .menu-row .rm{border:0;background:var(--red);color:#fff;border-radius:6px;padding:8px 10px;font-weight:700;cursor:pointer}
 
+/* 앱 설치 · 온라인 상담 */
+.top-actions{order:5;width:100%;display:flex;gap:8px;padding-bottom:2px}
+.top-actions > *{flex:1;display:flex;align-items:center;justify-content:center;min-height:40px;border-radius:8px;font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;padding:8px 10px;text-align:center;line-height:1.25}
+.ta-install{border:2px solid var(--ink);background:var(--bg);color:var(--ink)}
+.ta-consult{border:2px solid var(--red);background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-dark)}
+@media (min-width:980px){ .top-actions{width:auto;flex:0 0 auto;order:6} .top-actions > *{flex:0 0 auto;padding:8px 14px} }
+.inst-steps{margin:10px 0 0;padding-left:20px;line-height:1.7}
+.inst-steps li{margin-bottom:6px}
+.inst-box{background:var(--soft);border-radius:10px;padding:12px 14px;margin-top:12px;font-size:14px;line-height:1.6}
+
 /* 글자 꾸미기 도구 */
 .style-bar{position:fixed;left:50%;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:80;width:min(760px,calc(100% - 16px));background:#111216;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.35);display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;font-size:14px}
 .style-bar .sb-name{width:100%;font-weight:700;color:#ffd65a;font-size:13px}
@@ -369,9 +379,14 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
 #jd-splash img{width:min(44vw,210px);height:auto;border-radius:22%;box-shadow:0 10px 30px rgba(0,0,0,.18);animation:jdPop .6s cubic-bezier(.2,1.2,.4,1) both}
 #jd-splash.out{opacity:0;visibility:hidden}
 @keyframes jdPop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
-#jd-install{position:fixed;left:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2147482999;display:flex;align-items:center;gap:8px;background:#111216;color:#fff;border-radius:999px;padding:6px 6px 6px 14px;font:700 13px 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)}
-#jd-install button{border:0;border-radius:999px;padding:8px 12px;font:700 13px 'Noto Sans KR',sans-serif;cursor:pointer}
+#jd-install{position:fixed;right:10px;bottom:calc(10px + env(safe-area-inset-bottom,0px));z-index:2147482999;display:flex;align-items:center;gap:6px;background:#111216;color:#fff;border-radius:999px;padding:5px 5px 5px 12px;font:700 12px 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#jd-install button{border:0;border-radius:999px;padding:7px 11px;font:700 12px 'Noto Sans KR',sans-serif;cursor:pointer}
 #jd-install .go{background:#d7262b;color:#fff}#jd-install .x{background:#2c2e36;color:#fff}
+#jd-help{position:fixed;inset:0;z-index:2147483645;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+#jd-help .bx{background:#fff;color:#111216;width:min(520px,100%);max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom,0px));font:15px/1.6 'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+#jd-help b.t{display:block;font-size:19px;margin-bottom:6px}
+#jd-help .c{background:#f2f3f6;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
+#jd-help button{margin-top:14px;width:100%;border:0;border-radius:10px;background:#d7262b;color:#fff;font:700 15px 'Noto Sans KR',sans-serif;padding:13px;cursor:pointer}
 @media (prefers-reduced-motion: reduce){#jd-splash img{animation:none}#jd-splash{transition:none}}
 </style>
 <script>
@@ -381,21 +396,9 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
   window.addEventListener("load",function(){ setTimeout(hide,Math.max(0,750-(Date.now()-t0))); });
   setTimeout(hide,4000);
   if("serviceWorker" in navigator){ window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); }); }
-  var KEY="jd-install-off-jungdo", dp=null;
-  var standalone=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone;
-  window.addEventListener("beforeinstallprompt",function(e){
-    e.preventDefault(); dp=e; if(standalone) return; try{ if(localStorage.getItem(KEY)) return; }catch(_){}
-    if(document.getElementById("jd-install")) return;
-    var b=document.createElement("div"); b.id="jd-install"; b.innerHTML="<span>홈 화면에 앱으로 설치</span><button class='go' type='button'>설치</button><button class='x' type='button' aria-label='닫기'>닫기</button>";
-    b.querySelector(".go").onclick=function(){ dp.prompt(); dp.userChoice.then(function(){ b.remove(); }); };
-    b.querySelector(".x").onclick=function(){ b.remove(); try{ localStorage.setItem(KEY,"1"); }catch(_){} };
-    document.body.appendChild(b);
-  });
-  window.addEventListener("appinstalled",function(){ var b=document.getElementById("jd-install"); if(b) b.remove(); });
 
 })();
-</script>
-</head>
+</script></head>
 <body>
 <div id="jd-splash" aria-hidden="true"><img src="icon-512.png" alt=""></div>
 
@@ -407,6 +410,10 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
       <button type="button" data-b="1·3관" aria-pressed="false">1·3관</button>
     </div>
     <nav class="nav" aria-label="메뉴" id="menu"><a href="#gallery" data-k="navGal" data-scope="common"></a><a href="#programs" data-k="navProg" data-scope="common"></a><a href="#info" data-k="navInfo" data-scope="common"></a><a href="#share" data-k="navShare" data-scope="common"></a></nav>
+    <div class="top-actions" id="topActions">
+      <button type="button" class="ta-install" id="installBtn" data-k="installTxt" data-scope="common"></button>
+      <a class="ta-consult" id="consultBtn" href="https://yujongho0714.github.io/event/info.html?type=consult" data-k="consultTxt" data-scope="common"></a>
+    </div>
   </div>
 </header>
 <div class="admin-bar hidden" id="adminBar"><div class="container"><span id="adminMsg">관리자 모드: 사진과 영상을 올리고, 글과 메인 사진을 고칠 수 있어요</span>
@@ -606,6 +613,20 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
   </div>
 </div>
 <input type="file" id="csFile" accept="image/*" hidden>
+<div class="sheet-wrap hidden" id="installWrap" role="dialog" aria-modal="true" aria-labelledby="instTitle">
+  <div class="sheet">
+    <h3 id="instTitle">홈 화면에 앱으로 설치하기</h3>
+    <p class="hint">설치하면 주소창 없이 앱처럼 열리고, 아이콘을 누르면 바로 들어올 수 있어요.</p>
+    <div class="inst-box"><b>갤럭시 · 안드로이드 (크롬)</b>
+      <ol class="inst-steps"><li>오른쪽 위 <b>⋮</b> 를 누르세요</li><li><b>홈 화면에 추가</b>를 누르고 <b>설치</b>를 고르세요</li></ol></div>
+    <div class="inst-box"><b>삼성 인터넷</b>
+      <ol class="inst-steps"><li>아래 <b>≡</b> 를 누르세요</li><li><b>현재 페이지 추가 → 홈 화면</b>을 고르세요</li></ol></div>
+    <div class="inst-box"><b>아이폰 (사파리)</b>
+      <ol class="inst-steps"><li>아래 <b>공유 버튼</b>을 누르세요</li><li><b>홈 화면에 추가</b>를 고르세요</li></ol></div>
+    <div class="inst-box"><b>"이미 설치되어 있습니다"가 나오면</b><br>휴대폰 <b>설정 → 애플리케이션</b>에서 <b>정도태권도</b>를 찾아 삭제한 다음 다시 설치해 주세요. 아이콘을 꾹 눌러 "홈 화면에서 삭제"만 하면 앱은 그대로 남아 있어요.</div>
+    <div class="acts"><button class="btn red" type="button" id="instClose">확인</button></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -685,6 +706,7 @@ var TPL={
   basic:{menu:"새 메뉴",title:"새 메뉴 제목",body:"내용을 적어 주세요.",sign:"",listTitle:"",list:"",media:{t:"",v:""},layout:"left",branch:"all"}
 };
 var COMMON={
+  installTxt:"홈 화면에 앱으로 설치",consultTxt:"온라인 상담접수",
   menuOrder:["gallery","programs","info","share"],menuHidden:{},sections:{},
   navGal:"수련 모습",navProg:"프로그램",navInfo:"수련시간",navShare:"공유",
   shareTitle:"QR을 찍거나 카톡으로 보내 주세요",
@@ -784,6 +806,7 @@ function applyBranch(){
   applyAllStyles();
   var tel=digits(B.telText);
   $("heroCall").href="tel:"+tel; $("placePhone").href="tel:"+tel; $("placeCall").href="tel:"+tel;
+  $("consultBtn").href="https://yujongho0714.github.io/event/info.html?type=consult&b="+(branch==="2관"?"2":"13");
   $("placeMap").href="https://map.naver.com/p/search/"+encodeURIComponent(String(B.addr||"").replace(/\(.*?\)/g,"").trim());
   var img=$("heroImg");
   if(B.heroImg){ img.src=B.heroImg; img.classList.add("photo"); img.alt=B.name+" 도장 사진"; }
@@ -1115,6 +1138,24 @@ function pageTransition(mid){
   },Math.round(d*0.45));
 }
 applyFx(null);
+/* ---------- 앱 설치 ---------- */
+var deferredInstall=null;
+var isStandalone=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+if(isStandalone) $("installBtn").classList.add("hidden");
+window.addEventListener("beforeinstallprompt",function(e){ e.preventDefault(); deferredInstall=e; });
+window.addEventListener("appinstalled",function(){ $("installBtn").classList.add("hidden"); toast("홈 화면에 설치되었어요"); });
+$("installBtn").addEventListener("click",function(){
+  if(editing) return;
+  var go=function(){ var d=deferredInstall; deferredInstall=null; d.prompt(); d.userChoice.then(function(r){ if(r&&r.outcome==="accepted") $("installBtn").classList.add("hidden"); }); };
+  if(deferredInstall){ go(); return; }
+  var btn=$("installBtn"), old=btn.textContent; btn.textContent="설치 준비 중..."; var t0=Date.now();
+  (function wait(){
+    if(deferredInstall){ btn.textContent=old; go(); return; }
+    if(Date.now()-t0<2500){ setTimeout(wait,150); return; }
+    btn.textContent=old; fadeShow($("installWrap"));
+  })();
+});
+$("instClose").addEventListener("click",function(){ closeSheet("installWrap"); });
 function elTransition(el,mid,back){
   if(!el||navReduce||fx.trans==="none"){ mid(); return; }
   if(el._fxT){ clearTimeout(el._fxT); clearTimeout(el._fxT2); }
