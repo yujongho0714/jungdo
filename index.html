@@ -388,6 +388,29 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
 #jd-help .c{background:#f2f3f6;border-radius:10px;padding:10px 12px;margin-top:10px;font-size:14px}
 #jd-help button{margin-top:14px;width:100%;border:0;border-radius:10px;background:#d7262b;color:#fff;font:700 15px 'Noto Sans KR',sans-serif;padding:13px;cursor:pointer}
 @media (prefers-reduced-motion: reduce){#jd-splash img{animation:none}#jd-splash{transition:none}}
+
+/* 링크 한번에 올리기 · 골라서 앨범 옮기기 */
+.bk-row{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.bk-row .n{flex:0 0 28px;font-weight:900;text-align:right;color:var(--muted);font-size:14px}
+.bk-row input{flex:1;min-width:0}
+.bk-row input.bad{border-color:var(--red)!important}
+.bk-row .th{flex:0 0 58px;width:58px;height:42px;border-radius:5px;background:var(--soft) center/cover no-repeat}
+.bk-row .x{flex:0 0 auto;border:1.5px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px;cursor:pointer;font-weight:700}
+.card .chk{position:absolute;right:8px;top:8px;z-index:2;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.92);border:2px solid #111;color:transparent;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:17px;pointer-events:none}
+.card.picked{outline:4px solid var(--red);outline-offset:-4px}
+.card.picked .chk{background:var(--red);border-color:var(--red);color:#fff}
+.sel-bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--bg);border-top:2px solid var(--ink);padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(0,0,0,.18)}
+.sel-bar .sb-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sel-bar .sb-top b{font-size:17px}
+.sel-bar button{border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px 12px;font-weight:700;font-size:14px;cursor:pointer}
+.sel-bar .sb-quick{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.sel-bar .sb-quick span{font-size:13px;font-weight:700;color:var(--muted)}
+.sel-bar .sb-move{display:flex;gap:6px}
+.sel-bar .sb-move select{flex:1;min-width:0;padding:10px;border:1.5px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px}
+.sel-bar .sb-move button{background:var(--red);border-color:var(--red);color:#fff;font-size:15px}
+.sel-bar .sb-move button:disabled{opacity:.45}
+body.selmode{padding-bottom:170px}
+body.selmode .toast{bottom:calc(185px + env(safe-area-inset-bottom,0px))}
 </style>
 <script>
 (function(){
@@ -424,7 +447,7 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
   </div>
 </header>
 <div class="admin-bar hidden" id="adminBar"><div class="container"><span id="adminMsg">관리자 모드: 사진과 영상을 올리고, 글과 메인 사진을 고칠 수 있어요</span>
-  <button type="button" id="editBtn">글·사진 고치기</button><button type="button" id="fxBtn">효과 설정</button><button type="button" id="menuBtn">메뉴 관리</button><button type="button" id="catBtn">앨범 관리</button><button type="button" id="logoutBtn">로그아웃</button>
+  <button type="button" id="editBtn">글·사진 고치기</button><button type="button" id="fxBtn">효과 설정</button><button type="button" id="menuBtn">메뉴 관리</button><button type="button" id="catBtn">앨범 관리</button><button type="button" id="bulkBtn">링크 한번에 올리기</button><button type="button" id="selBtn">골라서 앨범 옮기기</button><button type="button" id="logoutBtn">로그아웃</button>
   <button type="button" id="saveEdit" class="hidden">저장</button><button type="button" id="cancelEdit" class="hidden">취소</button></div></div>
 <div class="demo-note hidden" id="demoNote"><div class="container">미리보기 화면이에요. 깃허브에 올리고 관리자로 로그인하면 사진과 영상을 올리고 글을 고칠 수 있어요.</div></div>
 
@@ -553,6 +576,7 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
         <label class="f" for="upUrl">유튜브 주소</label>
         <input type="url" id="upUrl" placeholder="https://youtu.be/... 또는 쇼츠 주소">
         <p class="hint">유튜브 앱에서 영상 → 공유 → 링크 복사 후 붙여 넣으세요. 일부공개로 올려도 돼요.</p>
+        <button class="btn" type="button" id="toBulk" style="margin-top:10px;width:100%">링크 여러 개 한번에 올리기</button>
       </div>
     </div>
     <label class="f" for="upName">제목</label>
@@ -563,6 +587,30 @@ button,.btn,.chip{-webkit-user-select:none;user-select:none;touch-action:manipul
   </div>
 </div>
 
+<div class="sheet-wrap hidden" id="bulkWrap" role="dialog" aria-modal="true" aria-labelledby="bulkTitle">
+  <div class="sheet">
+    <h3 id="bulkTitle">유튜브 링크 한번에 올리기</h3>
+    <label class="f">어느 도장 영상인가요?</label>
+    <div class="seg" id="bkBranch">
+      <button type="button" data-v="2관" aria-pressed="true">2관</button>
+      <button type="button" data-v="1·3관" aria-pressed="false">1·3관</button>
+      <button type="button" data-v="all" aria-pressed="false">둘 다</button>
+    </div>
+    <label class="f" for="bkCat">앨범 (이 앨범에 전부 들어가요)</label>
+    <div class="row"><select id="bkCat"></select><button class="btn" type="button" id="bkNewCat" style="flex:0 0 auto;padding:10px 14px">+ 새 앨범</button></div>
+    <label class="f">링크</label>
+    <div id="bkRows"></div>
+    <button class="btn" type="button" id="bkAdd" style="width:100%;margin-top:4px">+ 줄 추가</button>
+    <p class="hint" id="bkInfo"></p>
+    <p class="hint">링크 여러 개를 한꺼번에 복사해서 첫 줄에 붙여 넣으면 줄이 알아서 나뉘어요. 썸네일(미리보기 그림)은 링크를 넣으면 바로 보여요.</p>
+    <div class="acts"><button class="btn" type="button" id="bkCancel">취소</button><button class="btn red" type="button" id="bkSave">올리기</button></div>
+  </div>
+</div>
+<div class="sel-bar hidden" id="selBar" role="toolbar" aria-label="골라서 앨범 옮기기">
+  <div class="sb-top"><b id="selCnt">0개 선택</b><button type="button" id="selDone">완료</button></div>
+  <div class="sb-quick"><span>앞에서</span><button type="button" data-n="5">5개</button><button type="button" data-n="10">10개</button><button type="button" data-n="30">30개</button><button type="button" data-n="50">50개</button><button type="button" data-n="all">전체</button><button type="button" data-n="0">해제</button></div>
+  <div class="sb-move"><select id="selCat" aria-label="옮길 앨범"></select><button type="button" id="selMove" disabled>이 앨범으로 옮기기</button></div>
+</div>
 <div class="sheet-wrap hidden" id="catWrap" role="dialog" aria-modal="true" aria-labelledby="catTitle">
   <div class="sheet">
     <h3 id="catTitle">앨범 관리</h3>
@@ -731,7 +779,7 @@ function el(tag,cls,txt){var e=document.createElement(tag);if(cls)e.className=cl
 /* ---------- 상태 ---------- */
 var branch="2관";
 try{ var qb=new URLSearchParams(location.search).get("b"); if(qb==="13"||qb==="1"||qb==="3") branch="1·3관"; else if(qb==="2") branch="2관"; else { var sb=localStorage.getItem("jd-branch"); if(sb&&BR[sb]) branch=sb; } }catch(e){}
-var cats=[], posts=[], cat="all", shown=12, DEMO=false, db=null, auth=null, isAdmin=false;
+var cats=[], posts=[], cat="all", shown=12, DEMO=false, db=null, auth=null, isAdmin=false, selMode=false, sel={};
 
 /* ---------- 도장 정보 ---------- */
 function csKey(id,f){ return "cs__"+id+"__"+f; }
@@ -1240,11 +1288,12 @@ function renderGallery(){
     var card=el("article","card pop-in"); card.style.animationDelay=Math.min(idx,11)*45+"ms";
     var btn=el("button","media loading"); btn.type="button"; btn._p=p; btn.setAttribute("aria-label",(p.title||catName(p.cat))+" 크게 보기");
     if(p.type==="video"||p.type==="file") btn.appendChild(el("span","play"));
-    btn.addEventListener("click",function(){ openViewer(idx); });
+    btn.addEventListener("click",function(){ if(selMode){ toggleSel(p.id,card); return; } openViewer(idx); });
     card.appendChild(btn);
+    if(selMode){ card.classList.add("selmode"); card.appendChild(el("span","chk","✓")); if(sel[p.id]) card.classList.add("picked"); }
     var cn=catName(p.cat); if(cn) card.appendChild(el("span","tag",cn));
     var meta=el("div","meta"); meta.appendChild(el("b",null,p.title||cn||"수업 모습")); meta.appendChild(el("span",null,fmtDate(p.createdAt)+(p.branch==="all"?" · 1·2·3관":""))); card.appendChild(meta);
-    if(isAdmin&&!DEMO){
+    if(isAdmin&&!DEMO&&!selMode){
       var acts=el("div","admin-acts");
       var ed=el("button",null,"수정"); ed.type="button"; ed.addEventListener("click",function(){ openUpload(p); });
       var dl=el("button","del","삭제"); dl.type="button"; dl.addEventListener("click",function(){ removePost(p); });
@@ -1358,6 +1407,7 @@ loadScript(base+"firebase-app-compat.js")
 
 function setAdmin(on){
   if(!on&&editing){ setEditing(false); applyBranch(); }
+  if(!on&&selMode){ selMode=false; sel={}; document.body.classList.remove("selmode"); $("selBar").classList.add("hidden"); }
   isAdmin=on; $("adminBar").classList.toggle("hidden",!on); $("fab").classList.toggle("hidden",!on);
   $("loginBtn").textContent=on?"관리자 모드 사용 중":"관리자 로그인"; renderGallery();
 }
@@ -1529,6 +1579,136 @@ function removePost(p){
   var u={}; u["site/posts/"+p.id]=null; u["site/thumbs/"+p.id]=null; u["site/photos/"+p.id]=null; u["site/videos/"+p.id]=null;
   db.ref().update(u).then(function(){toast("지웠어요");},function(){toast("지우지 못했어요");});
 }
+
+/* ---------- 링크 한번에 올리기 ---------- */
+var bk={branch:"2관"};
+function bkNum(){ document.querySelectorAll("#bkRows .bk-row").forEach(function(r,i){ r.querySelector(".n").textContent=(i+1)+"."; }); }
+function bkInfo(){
+  var ok=0,bad=0,dup=0,seen={};
+  document.querySelectorAll("#bkRows input").forEach(function(i){ var v=i.value.trim(); if(!v) return; var id=ytId(v); if(!id){ bad++; return; } if(seen[id]){ dup++; return; } seen[id]=1; ok++; });
+  $("bkInfo").textContent="올릴 링크 "+ok+"개"+(dup?" · 같은 링크 "+dup+"개는 한 번만 올려요":"")+(bad?" · 주소를 확인할 줄 "+bad+"개":"");
+  $("bkSave").textContent=ok?ok+"개 올리기":"올리기";
+}
+function bkCheck(row){
+  var inp=row.querySelector("input"), th=row.querySelector(".th"), v=inp.value.trim(), id=ytId(v);
+  inp.classList.toggle("bad",!!v&&!id);
+  th.style.backgroundImage=id?"url(https://i.ytimg.com/vi/"+id+"/mqdefault.jpg)":"";
+  bkInfo();
+}
+function bkAddRow(val,after){
+  var row=el("div","bk-row"), n=el("span","n","1."), inp=document.createElement("input"), th=el("span","th"), x=el("button","x","✕");
+  inp.type="url"; inp.placeholder="https://youtu.be/..."; inp.setAttribute("inputmode","url"); inp.setAttribute("autocomplete","off"); inp.setAttribute("aria-label","유튜브 링크");
+  x.type="button"; x.setAttribute("aria-label","이 줄 지우기");
+  row.appendChild(n); row.appendChild(inp); row.appendChild(th); row.appendChild(x);
+  if(val) inp.value=val;
+  inp.addEventListener("input",function(){ bkCheck(row); });
+  inp.addEventListener("paste",function(e){
+    var t=(e.clipboardData&&e.clipboardData.getData("text"))||"", m=t.match(/https?:\/\/[^\s,]+/g);
+    if(!m||m.length<2) return;
+    e.preventDefault(); inp.value=m[0]; bkCheck(row);
+    var prev=row; m.slice(1).forEach(function(u){ prev=bkAddRow(u,prev); });
+    bkNum();
+  });
+  inp.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); var nr=bkAddRow("",row); bkNum(); nr.querySelector("input").focus(); } });
+  x.addEventListener("click",function(){
+    if(document.querySelectorAll("#bkRows .bk-row").length<=1){ inp.value=""; bkCheck(row); return; }
+    row.parentNode.removeChild(row); bkNum(); bkInfo();
+  });
+  var box=$("bkRows");
+  if(after&&after.nextSibling) box.insertBefore(row,after.nextSibling); else box.appendChild(row);
+  bkCheck(row); return row;
+}
+function bkFillCat(sel){
+  var s=$("bkCat"); s.innerHTML="";
+  cats.forEach(function(c){ var o=el("option",null,c.name); o.value=c.id; s.appendChild(o); });
+  if(sel) s.value=sel; else if(cat!=="all") s.value=cat;
+}
+function openBulk(){
+  bk.branch=branch; segSet("bkBranch",bk.branch); bkFillCat(null);
+  $("bkRows").innerHTML=""; for(var i=0;i<3;i++) bkAddRow(""); bkNum(); bkInfo();
+  $("bkSave").disabled=false; fadeShow($("bulkWrap"));
+}
+document.querySelectorAll("#bkBranch button").forEach(function(b){ b.addEventListener("click",function(){ bk.branch=b.dataset.v; segSet("bkBranch",b.dataset.v); }); });
+$("bulkBtn").addEventListener("click",openBulk);
+$("toBulk").addEventListener("click",function(){ closeSheet("upWrap"); setTimeout(openBulk,260); });
+$("bkAdd").addEventListener("click",function(){ var rows=document.querySelectorAll("#bkRows .bk-row"), nr=bkAddRow("",rows[rows.length-1]); bkNum(); nr.querySelector("input").focus(); });
+$("bkCancel").addEventListener("click",function(){ closeSheet("bulkWrap"); });
+$("bkNewCat").addEventListener("click",function(){
+  var n=prompt("새 앨범 이름 (예: 겨루기, 승급심사, 여름캠프)"); if(!n) return;
+  addCat(n).then(function(id){ if(id) setTimeout(function(){ bkFillCat(id); },300); });
+});
+$("bkSave").addEventListener("click",function(){
+  var catId=$("bkCat").value, btn=$("bkSave");
+  if(!catId){ toast("앨범을 골라 주세요"); return; }
+  var items=[], seen={}, bad=0, dup=0, have=0;
+  document.querySelectorAll("#bkRows .bk-row").forEach(function(row){
+    var inp=row.querySelector("input"), v=inp.value.trim(); if(!v) return;
+    var id=ytId(v); if(!id){ bad++; inp.classList.add("bad"); return; }
+    if(seen[id]){ dup++; return; } seen[id]=1;
+    if(posts.some(function(p){ return p.type==="video"&&p.yt===id&&p.cat===catId; })){ have++; return; }
+    items.push({id:id,short:/shorts\//.test(v)});
+  });
+  if(bad){ toast("주소가 이상한 줄이 "+bad+"개 있어요. 빨간 줄을 확인해 주세요"); return; }
+  if(!items.length){ toast(have?"이미 이 앨범에 있는 링크예요":"올릴 링크를 넣어 주세요"); return; }
+  btn.disabled=true; btn.textContent="올리는 중...";
+  ensureCatsSeeded().then(function(){
+    var base=Date.now(), u={}, n=items.length;
+    items.forEach(function(it,i){
+      var k=db.ref("site/posts").push().key;
+      u["site/posts/"+k]={branch:bk.branch,cat:catId,type:"video",yt:it.id,short:it.short,title:"",desc:"",createdAt:base+(n-i)};
+    });
+    return db.ref().update(u);
+  }).then(function(){
+    btn.disabled=false; closeSheet("bulkWrap");
+    var skip=dup+have; toast(items.length+"개를 올렸어요"+(skip?" (이미 있는 "+skip+"개는 건너뜀)":""));
+  }).catch(function(e){ btn.disabled=false; bkInfo(); toast("올리지 못했어요: "+(e&&e.message||e)); });
+});
+
+/* ---------- 골라서 앨범 옮기기 ---------- */
+function updateSelBar(){ var n=Object.keys(sel).length; $("selCnt").textContent=n+"개 선택"; $("selMove").disabled=!n; }
+function fillSelCat(){
+  var s=$("selCat"), keep=s.value; s.innerHTML="";
+  cats.forEach(function(c){ var o=el("option",null,c.name+" 앨범으로"); o.value=c.id; s.appendChild(o); });
+  var pick=cats.find(function(c){ return c.id!==cat; });
+  s.value=(keep&&cats.some(function(c){return c.id===keep;}))?keep:(pick?pick.id:"");
+}
+function enterSel(){
+  if(!isAdmin||DEMO) return;
+  selMode=true; sel={}; document.body.classList.add("selmode");
+  $("fab").classList.add("hidden"); fillSelCat(); updateSelBar();
+  $("selBar").classList.remove("hidden"); renderGallery();
+  toast("카드를 눌러 고르거나, 5·10·30개 버튼을 눌러요");
+}
+function exitSel(){
+  selMode=false; sel={}; document.body.classList.remove("selmode");
+  $("selBar").classList.add("hidden"); $("fab").classList.toggle("hidden",!isAdmin); renderGallery();
+}
+function toggleSel(id,card){
+  if(sel[id]){ delete sel[id]; card.classList.remove("picked"); } else { sel[id]=1; card.classList.add("picked"); }
+  updateSelBar();
+}
+function quickSel(v){
+  var list=visiblePosts(), n=v==="all"?list.length:parseInt(v,10)||0;
+  sel={}; list.slice(0,n).forEach(function(p){ sel[p.id]=1; });
+  if(n>shown) shown=Math.min(n,list.length);
+  renderGallery(); updateSelBar();
+  if(n&&list.length<n) toast("이 앨범에는 "+list.length+"개뿐이라 "+list.length+"개를 골랐어요");
+}
+$("selBtn").addEventListener("click",function(){ if(selMode) exitSel(); else enterSel(); });
+$("selDone").addEventListener("click",exitSel);
+document.querySelectorAll("#selBar [data-n]").forEach(function(b){ b.addEventListener("click",function(){ quickSel(b.dataset.n); }); });
+$("selMove").addEventListener("click",function(){
+  var tgt=$("selCat").value, ids=Object.keys(sel), u={}, n=0;
+  if(!tgt||!ids.length) return;
+  ids.forEach(function(id){ var p=posts.find(function(x){return x.id===id;}); if(p&&p.cat!==tgt){ u["site/posts/"+id+"/cat"]=tgt; n++; } });
+  if(!n){ toast("이미 그 앨범에 들어 있어요"); return; }
+  if(!confirm(n+"개를 '"+catName(tgt)+"' 앨범으로 옮길까요?")) return;
+  $("selMove").disabled=true;
+  ensureCatsSeeded().then(function(){ return db.ref().update(u); }).then(function(){
+    toast(n+"개를 '"+catName(tgt)+"' 앨범으로 옮겼어요"); sel={}; updateSelBar(); renderGallery();
+  }).catch(function(e){ updateSelBar(); toast("옮기지 못했어요: "+(e&&e.message||e)); });
+});
+
 
 applyBranch();
 })();
